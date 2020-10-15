@@ -1,6 +1,6 @@
 # PyTorch Implementation of PACT: Parameterized Clipping Activation for Quantized Neural Networks
 [Paper : PACT](https://arxiv.org/abs/1805.06085) 
-I have implemented to reproduce quantization paper PACT on CIFAR100 with ResNet18
+I have implemented to reproduce quantization paper PACT on CIFAR10 with ResNet18
 I have kept all experiment with first layer and last layer in 8bitwidth
 Please look at **Table 2 in the paper**
 | Bitwidth      | Original Paper ERR | Reproduced result ERR|
