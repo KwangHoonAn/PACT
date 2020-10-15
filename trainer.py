@@ -37,7 +37,7 @@ parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
-parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
+parser.add_argument('--weight-decay', '--wd', default=0.0002, type=float,
                     metavar='W', help='weight decay (default: 5e-4)')
 parser.add_argument('--print-freq', '-p', default=50, type=int,
                     metavar='N', help='print frequency (default: 20)')
@@ -66,10 +66,11 @@ def main():
     # Check the save_dir exists or not
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-
     model = torch.nn.DataParallel(resnet.__dict__[args.arch]())
     model.cuda()
 
+    # print(model)
+    # exit(1)
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -89,17 +90,17 @@ def main():
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10(root='./data', train=True, transform=transforms.Compose([
+        datasets.CIFAR10(root='<path_to_data>', train=True, transform=transforms.Compose([
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(32, 4),
             transforms.ToTensor(),
             normalize,
-        ]), download=True),
+        ]), download=False),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10(root='./data', train=False, transform=transforms.Compose([
+        datasets.CIFAR10(root='<path_to_data>', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
             normalize,
         ])),
@@ -109,23 +110,12 @@ def main():
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss().cuda()
 
-    if args.half:
-        model.half()
-        criterion.half()
-
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
 
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                        milestones=[100, 150], last_epoch=args.start_epoch - 1)
-
-    if args.arch in ['resnet1202', 'resnet110']:
-        # for resnet1202 original paper uses lr=0.01 for first 400 minibatches for warm-up
-        # then switch back. In this setup it will correspond for first epoch.
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = args.lr*0.1
-
+                                                        milestones=[60, 120], last_epoch=args.start_epoch - 1)
 
     if args.evaluate:
         validate(val_loader, model, criterion)
@@ -144,7 +134,7 @@ def main():
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1)
-
+        '''
         if epoch > 0 and epoch % args.save_every == 0:
             save_checkpoint({
                 'epoch': epoch + 1,
@@ -156,7 +146,8 @@ def main():
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
         }, is_best, filename=os.path.join(args.save_dir, 'model.th'))
-
+        '''
+        print("Best prec1 : ", best_prec1)
 
 def train(train_loader, model, criterion, optimizer, epoch):
     """
@@ -171,6 +162,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
 
     end = time.time()
+    # gamma = 0.0002
+    lambda_alpha = 0.0002
     for i, (input, target) in enumerate(train_loader):
 
         # measure data loading time
@@ -179,12 +172,18 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target = target.cuda()
         input_var = input.cuda()
         target_var = target
-        if args.half:
-            input_var = input_var.half()
+        # if args.half:
+            # input_var = input_var.half()
 
         # compute output
         output = model(input_var)
         loss = criterion(output, target_var)
+        # L2 regularization
+        l2_alpha = 0.0
+        for name, param in model.named_parameters():
+            if "alpha" in name:
+                l2_alpha += torch.pow(param, 2)
+        loss += lambda_alpha * l2_alpha
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -230,8 +229,8 @@ def validate(val_loader, model, criterion):
             input_var = input.cuda()
             target_var = target.cuda()
 
-            if args.half:
-                input_var = input_var.half()
+            # if args.half:
+                # input_var = input_var.half()
 
             # compute output
             output = model(input_var)
@@ -259,7 +258,9 @@ def validate(val_loader, model, criterion):
 
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))
-
+    for name, param in model.named_parameters():
+        if "alpha" in name:
+            print(name, param.item())
     return top1.avg
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):

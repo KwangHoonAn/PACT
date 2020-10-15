@@ -1,0 +1,67 @@
+[INFO] Starting docker: aimet-prod_0.90.0.87
+[INFO] Running cmd: /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10/run.sh
+[INFO] Adding --no-tty for non intereactive job...
+[INFO] Adding custom config -c /prj/neo_lv/scratch/kwanan/mltt/release/aimet-1.5.0_build-0.90.0.87/lib/config/aimet.conf
+[INFO] Adding volume by -v /nvme:/nvme
+[INFO] Adding workspace path -w /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10
+[INFO] Adding unique container name --name kwanan_WedApr0120_220602_996542058
+[INFO] Performing sanity check of the container
+
+[INFO] Exit status of sanity checker = 0
+0.90.0.87: Pulling from public/aimet/aimet-prod
+Digest: sha256:f0f34ed144206956e4d0eafef4a4be4e7764163685473ebc5b50e665cf298976
+Status: Image is up to date for morpheus-docker.qualcomm.com/public/aimet/aimet-prod:0.90.0.87
+CUDA is available and memory alloc test passed!
+
+
+[INFO] Executing: crad-docker --no-tty  -c /prj/neo_lv/scratch/kwanan/mltt/release/aimet-1.5.0_build-0.90.0.87/lib/config/aimet.conf -v "/nvme:/nvme" -w "/prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10" --name "kwanan_WedApr0120_220602_996542058" aimet-prod_0.90.0.87 -- " bash -l -c '/prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10/run.sh' " 
+0.90.0.87: Pulling from public/aimet/aimet-prod
+Digest: sha256:f0f34ed144206956e4d0eafef4a4be4e7764163685473ebc5b50e665cf298976
+Status: Image is up to date for morpheus-docker.qualcomm.com/public/aimet/aimet-prod:0.90.0.87
+['resnet110', 'resnet1202', 'resnet20', 'resnet32', 'resnet44', 'resnet56']
+current lr 1.00000e-01
+[INFO] Containerized job with container name kwanan_WedApr0120_220602_996542058 exited!  Start: Wed Apr  1 22:06:03 PDT 2020   End: Wed Apr  1 22:07:59 PDT 2020
+
+
+------------------------------------------------------------
+Sender: LSF System <iceadmin@crd-lsf-gpu08>
+Subject: Job 181126: </prj/neoci/tools/ssit-tools/containerize_job.sh -f /prj/neo_lv/scratch/kwanan/mltt/release/aimet-1.5.0_build-0.90.0.87/lib/config/aimet.conf -a aimet-prod_0.90.0.87 -c /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10/run.sh -w /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10> in cluster <GRIDSDCC> Exited
+
+Job </prj/neoci/tools/ssit-tools/containerize_job.sh -f /prj/neo_lv/scratch/kwanan/mltt/release/aimet-1.5.0_build-0.90.0.87/lib/config/aimet.conf -a aimet-prod_0.90.0.87 -c /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10/run.sh -w /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10> was submitted from host <morph-wk1-dualgpu> by user <kwanan> in cluster <GRIDSDCC> at Wed Apr  1 22:05:59 2020
+Job was executed on host(s) <crd-lsf-gpu08>, in queue <QcDev>, as user <kwanan> in cluster <GRIDSDCC> at Wed Apr  1 22:06:01 2020
+</usr2/kwanan> was used as the home directory.
+</prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10> was used as the working directory.
+Started at Wed Apr  1 22:06:01 2020
+Terminated at Wed Apr  1 22:07:59 2020
+Results reported at Wed Apr  1 22:07:59 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+/prj/neoci/tools/ssit-tools/containerize_job.sh -f /prj/neo_lv/scratch/kwanan/mltt/release/aimet-1.5.0_build-0.90.0.87/lib/config/aimet.conf -a aimet-prod_0.90.0.87 -c /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10/run.sh -w /prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   4.78 sec.
+    Max Memory :                                 38.46 MB
+    Average Memory :                             36.03 MB
+    Total Requested Memory :                     2000.00 MB
+    Delta Memory :                               1961.54 MB
+    Max Swap :                                   -
+    Max Processes :                              7
+    Max Threads :                                21
+    Run time :                                   128 sec.
+    Turnaround time :                            120 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file </prj/neo_lv/scratch/kwanan/personal/PACT/pytorch_resnet_cifar10/quant_error.log> for stderr output of this job.
+

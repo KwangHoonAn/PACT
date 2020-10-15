@@ -31,11 +31,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-
+from module import ActFn, Conv2d, Linear
 from torch.autograd import Variable
 
 __all__ = ['ResNet', 'resnet20', 'resnet32', 'resnet44', 'resnet56', 'resnet110', 'resnet1202']
-
+K = 2
+print("Bit :", K)
 def _weights_init(m):
     classname = m.__class__.__name__
     #print(classname)
@@ -56,11 +57,15 @@ class BasicBlock(nn.Module):
 
     def __init__(self, in_planes, planes, stride=1, option='A'):
         super(BasicBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        # self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv1 = Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False, bitwidth = K)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
+        self.alpha1 = nn.Parameter(torch.tensor(10.))
+        # self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv2 = Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False, bitwidth = K)
         self.bn2 = nn.BatchNorm2d(planes)
-
+        self.alpha2 = nn.Parameter(torch.tensor(10.))
+        self.ActFn = ActFn.apply
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != planes:
             if option == 'A':
@@ -71,15 +76,18 @@ class BasicBlock(nn.Module):
                                             F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
             elif option == 'B':
                 self.shortcut = nn.Sequential(
-                     nn.Conv2d(in_planes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
+                     # nn.Conv2d(in_planes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
+                     Conv2d(in_planes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
                      nn.BatchNorm2d(self.expansion * planes)
                 )
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
+        # out = F.relu(self.bn1(self.conv1(x)))
+        out = self.ActFn(self.bn1(self.conv1(x)), self.alpha1, K)
         out = self.bn2(self.conv2(out))
         out += self.shortcut(x)
-        out = F.relu(out)
+        # out = F.relu(out)
+        out = self.ActFn(out, self.alpha2, K)
         return out
 
 
@@ -88,13 +96,16 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.in_planes = 16
 
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        # self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False, bitwidth = 8)
         self.bn1 = nn.BatchNorm2d(16)
+        self.alpha1 = nn.Parameter(torch.tensor(10.))
+        self.ActFn = ActFn.apply
         self.layer1 = self._make_layer(block, 16, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 32, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2)
-        self.linear = nn.Linear(64, num_classes)
-
+        # self.linear = nn.Linear(64, num_classes)
+        self.linear = Linear(64, num_classes, bitwidth = 8)
         self.apply(_weights_init)
 
     def _make_layer(self, block, planes, num_blocks, stride):
@@ -107,7 +118,8 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
+        # out = F.relu(self.bn1(self.conv1(x)))
+        out = self.ActFn(self.bn1(self.conv1(x)), self.alpha1, K)
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -120,25 +132,6 @@ class ResNet(nn.Module):
 def resnet20():
     return ResNet(BasicBlock, [3, 3, 3])
 
-
-def resnet32():
-    return ResNet(BasicBlock, [5, 5, 5])
-
-
-def resnet44():
-    return ResNet(BasicBlock, [7, 7, 7])
-
-
-def resnet56():
-    return ResNet(BasicBlock, [9, 9, 9])
-
-
-def resnet110():
-    return ResNet(BasicBlock, [18, 18, 18])
-
-
-def resnet1202():
-    return ResNet(BasicBlock, [200, 200, 200])
 
 
 def test(net):
